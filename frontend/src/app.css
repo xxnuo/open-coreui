@@ -708,9 +708,14 @@ body {
 }
 
 :root {
+	--ui-scale: 1;
 	--pm-accent: color-mix(in oklab, Highlight 70%, transparent);
 	--pm-fill-target: color-mix(in oklab, Highlight 26%, transparent);
 	--pm-fill-ancestor: color-mix(in oklab, Highlight 16%, transparent);
+}
+
+html {
+	font-size: calc(16px * var(--ui-scale));
 }
 
 .pm-li-drop-before,

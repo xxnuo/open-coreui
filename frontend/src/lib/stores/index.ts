@@ -25,6 +25,9 @@ export const USAGE_POOL: Writable<null | string[]> = writable(null);
 
 export const theme = writable('system');
 
+// UI Scale/Zoom
+export const uiScale = writable(1.0);
+
 export const TTSWorker = writable(null);
 
 export const chatId = writable('');

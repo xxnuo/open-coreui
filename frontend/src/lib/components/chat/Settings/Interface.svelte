@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { config, models, settings, user } from '$lib/stores';
+	import { config, models, settings, user, uiScale } from '$lib/stores';
 	import { createEventDispatcher, onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import { get } from 'svelte/store';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { updateUserInfo } from '$lib/apis/users';
 	import { getUserPosition } from '$lib/utils';
@@ -34,6 +35,36 @@
 	// Interface
 	let defaultModelId = '';
 	let showUsername = false;
+
+	// UI Scale
+	let uiScaleValue = 1.0;
+
+	const applyUIScale = (scale: number) => {
+		document.documentElement.style.setProperty('--ui-scale', scale.toString());
+		uiScale.set(scale);
+		localStorage.setItem('ui-scale', scale.toString());
+	};
+
+	const zoomIn = () => {
+		if (uiScaleValue < 2.0) {
+			uiScaleValue = Math.min(2.0, uiScaleValue + 0.1);
+			uiScaleValue = Math.round(uiScaleValue * 10) / 10; // Round to 1 decimal place
+			applyUIScale(uiScaleValue);
+		}
+	};
+
+	const zoomOut = () => {
+		if (uiScaleValue > 0.5) {
+			uiScaleValue = Math.max(0.5, uiScaleValue - 0.1);
+			uiScaleValue = Math.round(uiScaleValue * 10) / 10; // Round to 1 decimal place
+			applyUIScale(uiScaleValue);
+		}
+	};
+
+	const resetZoom = () => {
+		uiScaleValue = 1.0;
+		applyUIScale(uiScaleValue);
+	};
 
 	let notificationSound = true;
 	let notificationSoundAlways = false;
@@ -178,6 +209,11 @@
 	};
 
 	onMount(async () => {
+		// Initialize UI scale from store
+		const unsubscribe = uiScale.subscribe(value => {
+			uiScaleValue = value;
+		});
+
 		titleAutoGenerate = $settings?.title?.auto ?? true;
 		autoTags = $settings?.autoTags ?? true;
 		autoFollowUps = $settings?.autoFollowUps ?? true;
@@ -307,6 +343,48 @@
 	<div class=" space-y-3 overflow-y-scroll max-h-[28rem] md:max-h-full">
 		<div>
 			<h1 class=" mb-2 text-sm font-medium">{$i18n.t('UI')}</h1>
+
+			<div class="mb-2.5">
+				<div class=" self-center text-xs font-medium">
+					{$i18n.t('UI Scale')}
+				</div>
+				
+				<div class="flex items-center gap-2 mt-1">
+							<button 
+			class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700  rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 font-medium"
+			on:click={() => {
+				uiScaleValue = Math.max(0.5, uiScaleValue - 0.1);
+				applyUIScale(uiScaleValue);
+			}}
+		>
+			-
+		</button>
+
+				<span class="text-xs px-4 py-1 border-gray-300 border-1 bg-white dark:bg-gray-800 rounded-xl font-medium">
+			{Math.round(uiScaleValue * 100)}%
+		</span>
+				<button 
+			class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 font-medium"
+			on:click={() => {
+				uiScaleValue = Math.min(2.0, uiScaleValue + 0.1);
+				applyUIScale(uiScaleValue);
+			}}
+		>
+			+
+		</button>
+
+		<button 
+			class="text-xs px-4 py-1 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 font-medium"
+			on:click={() => {
+				uiScaleValue = 1.0;
+				applyUIScale(uiScaleValue);
+			}}
+		>
+			{$i18n.t('Reset')}
+		</button>
+				</div>
+			</div>
+
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
