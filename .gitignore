@@ -1,8 +1,7 @@
 # Rust
-/target/
+target/
 **/*.rs.bk
 *.pdb
-Cargo.lock
 
 # Environment
 .env
