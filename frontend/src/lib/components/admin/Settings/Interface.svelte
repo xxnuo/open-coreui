@@ -7,8 +7,9 @@
 
 	import { getBackendConfig, getModels, getTaskConfig, updateTaskConfig } from '$lib/apis';
 	import { setDefaultPromptSuggestions } from '$lib/apis/configs';
-	import { config, settings, user } from '$lib/stores';
+	import { config, settings, user, uiScale } from '$lib/stores';
 	import { createEventDispatcher, onMount, getContext } from 'svelte';
+	import { get } from 'svelte/store';
 
 	import { banners as _banners } from '$lib/stores';
 	import type { Banner } from '$lib/types';
@@ -46,6 +47,23 @@
 
 	let promptSuggestions = [];
 	let banners: Banner[] = [];
+
+	// UI Scale variables
+	let uiScaleValue = 1.0;
+
+	// Initialize uiScaleValue from store
+	onMount(() => {
+		const unsubscribe = uiScale.subscribe(value => {
+			uiScaleValue = value;
+		});
+		return unsubscribe;
+	});
+
+	const applyUIScale = (scale: number) => {
+		document.documentElement.style.setProperty('--ui-scale', scale.toString());
+		uiScale.set(scale);
+		localStorage.setItem('ui-scale', scale.toString());
+	};
 
 	const updateInterfaceHandler = async () => {
 		taskConfig = await updateTaskConfig(localStorage.token, taskConfig);
@@ -388,11 +406,52 @@
 
 				<hr class=" border-gray-100 dark:border-gray-850 my-2" />
 
-				<div class="mb-2.5">
-					<div class="flex w-full justify-between">
-						<div class=" self-center text-xs">
-							{$i18n.t('Banners')}
-						</div>
+<div class="mb-2.5">
+	<div class=" self-center text-xs font-medium">
+		{$i18n.t('UI Scale')}
+	</div>
+	
+	<div class="flex items-center gap-2 mt-1">
+		<button 
+			class="text-xs px-2 py-1 bg-gray-50 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 font-medium"
+			on:click={() => {
+				uiScaleValue = Math.max(0.5, uiScaleValue - 0.1);
+				applyUIScale(uiScaleValue);
+			}}
+		>
+			-
+		</button>
+
+				<span class="text-xs px-4 py-1 border-gray-300 border-1 bg-white dark:bg-gray-800 rounded-xl font-medium">
+			{Math.round(uiScaleValue * 100)}%
+		</span>
+				<button 
+			class="text-xs px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 font-medium"
+			on:click={() => {
+				uiScaleValue = Math.min(2.0, uiScaleValue + 0.1);
+				applyUIScale(uiScaleValue);
+			}}
+		>
+			+
+		</button>
+
+		<button 
+			class="text-xs px-4 py-1 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 font-medium"
+			on:click={() => {
+				uiScaleValue = 1.0;
+				applyUIScale(uiScaleValue);
+			}}
+		>
+			{$i18n.t('Reset')}
+		</button>
+	</div>
+</div>
+
+<div class="mb-2.5">
+	<div class="flex w-full justify-between">
+		<div class=" self-center text-xs">
+			{$i18n.t('Banners')}
+		</div>
 
 						<button
 							class="p-1 px-3 text-xs flex rounded-sm transition"
